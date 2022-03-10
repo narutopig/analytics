@@ -125,6 +125,7 @@ const tiers = [
   "Uber",
   "AG",
 ];
+
 const dtiers = [
   "NFE",
   "LC",
@@ -135,6 +136,7 @@ const dtiers = [
   "(DUber)",
   "DUber",
 ];
+
 const types = [
   "Normal",
   "Fire",
@@ -174,36 +176,56 @@ const scoreType = (type: string, pokemon: Map<string, Pokemon>) => {
   return total / count;
 };
 
-const getEffectiveTier = (val: number) => {
+const doubleScoreType = (type: string, pokemon: Map<string, Pokemon>) => {
+  let total = 0;
+  let count = 0;
+
+  let filtered = new Map(
+    [...pokemon]
+      .filter((stuff: [string, Pokemon]) => !!stuff[1].doublesTier)
+      .filter((stuff: [string, Pokemon]) => stuff[1].types.includes(type))
+      .filter(notGmax)
+  );
+
+  for (let [k, v] of filtered) {
+    if (!v.doublesTier) continue;
+    total += dtiers.indexOf(v.doublesTier);
+    count++;
+  }
+
+  return total / count;
+};
+
+const getEffectiveTier = (val: number, doubles?: boolean) => {
   // rounds up if the tier is a bl tier
   let index = Math.round(val);
-  let tier = tiers[index];
+  let tier = doubles ? dtiers[index] : tiers[index];
 
   if (tier.endsWith("BL")) tier = tiers[index + 1];
 
   return tier;
 };
 
-const getFloorTier = (val: number) => {
+const getFloorTier = (val: number, doubles?: boolean) => {
   // uses Math.floor
   let index = Math.floor(val);
-  let tier = tiers[index];
+  let tier = doubles ? dtiers[index] : tiers[index];
 
   return tier;
 };
 
-const getRoundTier = (val: number) => {
+const getRoundTier = (val: number, doubles?: boolean) => {
   // uses Math.round
   let index = Math.round(val);
-  let tier = tiers[index];
+  let tier = doubles ? dtiers[index] : tiers[index];
 
   return tier;
 };
 
-const getCeilTier = (val: number) => {
+const getCeilTier = (val: number, doubles?: boolean) => {
   // uses Math.ceil
   let index = Math.ceil(val);
-  let tier = tiers[index];
+  let tier = doubles ? dtiers[index] : tiers[index];
 
   return tier;
 };
@@ -213,7 +235,7 @@ fetchData(true).then((res) => {
 
   let temp = new Map<string, number>();
   for (let type of types) {
-    let s = scoreType(type, pokemon);
+    let s = doubleScoreType(type, pokemon);
 
     temp.set(type, s);
   }
@@ -224,6 +246,6 @@ fetchData(true).then((res) => {
     )
   );
   for (let [k, v] of info) {
-    console.log(`${k}: ${v}`);
+    console.log(`${k}: ${getRoundTier(v, true)}`);
   }
 });
